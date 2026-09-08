@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   CalendarDays,
@@ -11,8 +12,9 @@ import {
   Ticket,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/painel")({
+export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
       { title: "Painel do Cidadão | Fila Zero UBS" },
@@ -43,14 +45,40 @@ const acoes = [
 ];
 
 function PainelPage() {
+  const navigate = useNavigate();
+  const [nome, setNome] = useState<string>("Cidadão");
+
+  useEffect(() => {
+    let ativo = true;
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData.user;
+      if (!user || !ativo) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("nome")
+        .eq("id", user.id)
+        .maybeSingle();
+      const nomeFinal =
+        data?.nome ?? (user.user_metadata?.["nome"] as string | undefined) ?? "Cidadão";
+      if (ativo) setNome(nomeFinal.split(" ")[0] ?? "Cidadão");
+    })();
+    return () => {
+      ativo = false;
+    };
+  }, []);
+
+  async function sair() {
+    await supabase.auth.signOut();
+    navigate({ to: "/", replace: true });
+  }
+
   return (
     <main className="min-h-screen bg-surface pb-12">
       <header className="rounded-b-3xl bg-card px-5 pb-6 pt-8 shadow-soft">
         <div className="mx-auto flex max-w-md flex-col items-center">
           <Logo />
-          <h1 className="mt-5 self-start text-2xl font-extrabold text-foreground">
-            Olá, Cidadão!
-          </h1>
+          <h1 className="mt-5 self-start text-2xl font-extrabold text-foreground">Olá, {nome}!</h1>
           <p className="mt-1 self-start text-sm text-muted-foreground">
             O que você precisa resolver hoje na sua unidade de saúde?
           </p>
@@ -81,12 +109,13 @@ function PainelPage() {
           ))}
         </div>
 
-        <Link
-          to="/"
+        <button
+          type="button"
+          onClick={sair}
           className="mt-7 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-input bg-background text-sm font-semibold text-foreground transition-colors hover:bg-secondary"
         >
           <LogOut size={18} /> Sair da conta
-        </Link>
+        </button>
       </section>
     </main>
   );

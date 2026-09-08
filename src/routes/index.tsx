@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { IdCard, Lock, LogIn, ShieldCheck } from "lucide-react";
+import { IdCard, Loader2, Lock, LogIn } from "lucide-react";
 import { AuthShell, Field } from "@/components/AuthShell";
+import { supabase } from "@/integrations/supabase/client";
+import { documentoToEmail, normalizeDocumento } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,15 +26,38 @@ export const Route = createFileRoute("/")({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [documento, setDocumento] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [carregando, setCarregando] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErro(null);
+
+    const doc = normalizeDocumento(documento);
+    if (doc.length < 7) {
+      setErro("Informe um CPF ou CNES válido.");
+      return;
+    }
+
+    setCarregando(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: documentoToEmail(doc),
+      password: senha,
+    });
+    setCarregando(false);
+
+    if (error) {
+      setErro("CPF/CNES ou senha incorretos.");
+      return;
+    }
+    navigate({ to: "/painel" });
+  }
 
   return (
     <AuthShell title="Bem-vindo de volta" subtitle="Entre para acompanhar sua fila na UBS">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          navigate({ to: "/painel" });
-        }}
-      >
+      <form onSubmit={handleSubmit}>
         <Field
           id="documento"
           label="CPF ou CNES"
@@ -39,6 +65,8 @@ function LoginPage() {
           placeholder="Digite seu CPF ou CNES"
           inputMode="numeric"
           autoComplete="username"
+          value={documento}
+          onChange={(e) => setDocumento(e.target.value)}
         />
         <Field
           id="senha"
@@ -47,6 +75,8 @@ function LoginPage() {
           type="password"
           placeholder="Digite sua senha"
           autoComplete="current-password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
         />
 
         <div className="mb-6 text-right">
@@ -58,27 +88,21 @@ function LoginPage() {
           </Link>
         </div>
 
+        {erro ? (
+          <p className="mb-4 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {erro}
+          </p>
+        ) : null}
+
         <button
           type="submit"
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-card transition-colors hover:bg-brand-deep"
+          disabled={carregando}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-card transition-colors hover:bg-brand-deep disabled:opacity-60"
         >
-          <LogIn size={18} /> Acessar
+          {carregando ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />}
+          Acessar
         </button>
       </form>
-
-      <div className="my-5 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs font-semibold text-muted-foreground">OU</span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => navigate({ to: "/painel" })}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-primary/40 bg-accent text-sm font-semibold text-accent-foreground transition-colors hover:bg-brand-soft"
-      >
-        <ShieldCheck size={18} /> Entrar com Gov.br
-      </button>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Novo por aqui?{" "}
