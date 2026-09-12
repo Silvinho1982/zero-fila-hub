@@ -55,7 +55,11 @@ const acoes = [
 
 function PainelPage() {
   const navigate = useNavigate();
-  const [nome, setNome] = useState<string>("Cidadão");
+  const online = useOnlineStatus();
+  const [nome, setNome] = useState<string>(() => readCache<string>("nome")?.data ?? "Cidadão");
+  const [unidade, setUnidade] = useState<string | null>(
+    () => readCache<string>("unidade_nome")?.data ?? null,
+  );
 
   useEffect(() => {
     let ativo = true;
@@ -65,12 +69,19 @@ function PainelPage() {
       if (!user || !ativo) return;
       const { data } = await supabase
         .from("profiles")
-        .select("nome")
+        .select("nome, unidades(nome)")
         .eq("id", user.id)
         .maybeSingle();
       const nomeFinal =
         data?.nome ?? (user.user_metadata?.["nome"] as string | undefined) ?? "Cidadão";
-      if (ativo) setNome(nomeFinal.split(" ")[0] ?? "Cidadão");
+      if (!ativo) return;
+      const primeiro = nomeFinal.split(" ")[0] ?? "Cidadão";
+      setNome(primeiro);
+      writeCache("nome", primeiro);
+      const unidadeNome =
+        (data as { unidades?: { nome: string } | null } | null)?.unidades?.nome ?? null;
+      setUnidade(unidadeNome);
+      if (unidadeNome) writeCache("unidade_nome", unidadeNome);
     })();
     return () => {
       ativo = false;
@@ -91,6 +102,33 @@ function PainelPage() {
           <p className="mt-1 self-start text-sm text-muted-foreground">
             O que você precisa resolver hoje na sua unidade de saúde?
           </p>
+
+          {!online ? (
+            <p className="mt-4 flex w-full items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-xs font-medium text-secondary-foreground">
+              <CloudOff size={14} aria-hidden="true" /> Sem internet: você está vendo as informações
+              salvas no aparelho.
+            </p>
+          ) : null}
+
+          <Link
+            to="/ubs"
+            className="mt-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-brand-soft p-4 text-left transition-colors hover:border-primary"
+          >
+            <span className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <Hospital size={20} />
+              </span>
+              <span>
+                <span className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Sua unidade
+                </span>
+                <span className="block text-sm font-bold text-foreground">
+                  {unidade ?? "Escolher UBS de referência"}
+                </span>
+              </span>
+            </span>
+            <ChevronRight size={18} className="text-primary" aria-hidden="true" />
+          </Link>
         </div>
       </header>
 
@@ -103,19 +141,29 @@ function PainelPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {acoes.map(({ icon: Icon, titulo, desc }) => (
-            <button
-              key={titulo}
-              type="button"
-              className="group flex flex-col items-start gap-2 rounded-2xl border border-border bg-card p-4 text-left shadow-card transition-colors hover:border-primary/50 hover:bg-accent"
-            >
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-colors group-hover:bg-brand-deep">
-                <Icon size={20} />
-              </span>
-              <span className="text-sm font-bold text-foreground">{titulo}</span>
-              <span className="text-xs leading-snug text-muted-foreground">{desc}</span>
-            </button>
-          ))}
+          {acoes.map(({ icon: Icon, titulo, desc, to }) => {
+            const conteudo = (
+              <>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-colors group-hover:bg-brand-deep">
+                  <Icon size={20} />
+                </span>
+                <span className="text-sm font-bold text-foreground">{titulo}</span>
+                <span className="text-xs leading-snug text-muted-foreground">{desc}</span>
+              </>
+            );
+            const classes =
+              "group flex min-h-11 flex-col items-start gap-2 rounded-2xl border border-border bg-card p-4 text-left shadow-card transition-colors hover:border-primary/50 hover:bg-accent";
+
+            return to ? (
+              <Link key={titulo} to={to} className={classes}>
+                {conteudo}
+              </Link>
+            ) : (
+              <button key={titulo} type="button" className={classes}>
+                {conteudo}
+              </button>
+            );
+          })}
         </div>
 
         <button
