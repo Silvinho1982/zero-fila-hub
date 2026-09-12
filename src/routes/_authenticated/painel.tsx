@@ -34,7 +34,12 @@ export const Route = createFileRoute("/_authenticated/painel")({
 });
 
 const acoes = [
-  { icon: Hospital, titulo: "UBS", desc: "Localizar unidades básicas de saúde" },
+  {
+    icon: Hospital,
+    titulo: "UBS",
+    desc: "Localizar unidades básicas de saúde",
+    to: "/ubs" as const,
+  },
   { icon: ListOrdered, titulo: "Prioridade", desc: "Consultar critérios de prioridade" },
   { icon: Stethoscope, titulo: "Sintomas", desc: "Triagem rápida de sintomas" },
   { icon: Activity, titulo: "Triagem", desc: "Status atual na fila" },
