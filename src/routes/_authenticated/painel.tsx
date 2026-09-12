@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   CalendarDays,
+  ChevronRight,
+  CloudOff,
   Hospital,
   ListOrdered,
   LogOut,
@@ -13,6 +15,8 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { supabase } from "@/integrations/supabase/client";
+import { readCache, writeCache } from "@/lib/offline";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
