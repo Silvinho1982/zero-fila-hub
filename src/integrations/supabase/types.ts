@@ -20,16 +20,63 @@ export type Database = {
           documento: string
           id: string
           nome: string
+          unidade_id: string | null
         }
         Insert: {
           created_at?: string
           documento: string
           id: string
           nome: string
+          unidade_id?: string | null
         }
         Update: {
           created_at?: string
           documento?: string
+          id?: string
+          nome?: string
+          unidade_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_unidade_id_fkey"
+            columns: ["unidade_id"]
+            isOneToOne: false
+            referencedRelation: "unidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades: {
+        Row: {
+          aberta: boolean
+          bairro: string
+          cidade: string
+          created_at: string
+          endereco: string
+          espera_minutos: number
+          fila_atual: number
+          id: string
+          nome: string
+        }
+        Insert: {
+          aberta?: boolean
+          bairro: string
+          cidade: string
+          created_at?: string
+          endereco: string
+          espera_minutos?: number
+          fila_atual?: number
+          id?: string
+          nome: string
+        }
+        Update: {
+          aberta?: boolean
+          bairro?: string
+          cidade?: string
+          created_at?: string
+          endereco?: string
+          espera_minutos?: number
+          fila_atual?: number
           id?: string
           nome?: string
         }
