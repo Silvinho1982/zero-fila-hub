@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedUbsRouteImport } from './routes/_authenticated/ubs'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,18 +40,25 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   path: '/painel',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUbsRoute = AuthenticatedUbsRouteImport.update({
+  id: '/ubs',
+  path: '/ubs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/ubs': typeof AuthenticatedUbsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/ubs': typeof AuthenticatedUbsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -59,12 +67,13 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/ubs': typeof AuthenticatedUbsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro' | '/recuperar-senha' | '/painel'
+  fullPaths: '/' | '/cadastro' | '/recuperar-senha' | '/painel' | '/ubs'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro' | '/recuperar-senha' | '/painel'
+  to: '/' | '/cadastro' | '/recuperar-senha' | '/painel' | '/ubs'
   id:
     | '__root__'
     | '/'
@@ -72,6 +81,7 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/recuperar-senha'
     | '/_authenticated/painel'
+    | '/_authenticated/ubs'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,15 +128,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPainelRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ubs': {
+      id: '/_authenticated/ubs'
+      path: '/ubs'
+      fullPath: '/ubs'
+      preLoaderRoute: typeof AuthenticatedUbsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedUbsRoute: typeof AuthenticatedUbsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedUbsRoute: AuthenticatedUbsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
